@@ -182,12 +182,10 @@ if st.session_state.selected_features_for_model:
                     st.metric("Unique Values", data[feature].nunique())
                 else:
                     st.write("Basic stats/preview not applicable for this data type in this view.")
-elif st.session_state.get('selected_features_for_model') is not None:
-    st.info("Select features on the left to see their details and relationship with the target.")
+
 
 # --- Final Step ---
 st.markdown("---")
 if st.session_state.selected_features_for_model and st.session_state.selected_target_key:
     st.success("✅ Features and target selected. Proceed to the **`04_Model_Training`** page from the sidebar.")
-else:
-    st.warning("⚠️ Please select a target and at least one input feature to proceed.")
+
