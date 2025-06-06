@@ -12,7 +12,7 @@ st.markdown("---")
 if 'collected_data_df' not in st.session_state or \
    st.session_state.collected_data_df is None or \
    st.session_state.collected_data_df.empty:
-    st.warning("📉 No data available for exploration. Please go to the 'Data Collection' page first to collect or load data.")
+    st.error("📉 No data available for exploration. Please go to the 'Data Collection' page first to collect or load data.")
     st.stop()  # Stop execution if no data
 
 data = st.session_state.collected_data_df

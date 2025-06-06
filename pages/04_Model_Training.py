@@ -38,7 +38,6 @@ if task_type == "classification":
     model_options = ["Random Forest Classifier", "Logistic Regression"]
     default_model = "Random Forest Classifier"
 else:
-    # This handles other potential task types you might add later
     st.error(f"Invalid or unsupported task type determined: '{task_type}'")
     st.stop()
 
@@ -65,7 +64,6 @@ if st.button(f"🚀 Train {selected_model_name}", type="primary"):
             st.error("Preprocessor could not be initialized. Cannot train.")
             st.stop()
 
-        # Drop rows with NaN in the target variable after engineering
         if y.isnull().any():
             st.warning(f"Target variable 'y' contains {y.isnull().sum()} NaN values after engineering. These rows will be dropped before training.")
             valid_indices = y.dropna().index
@@ -100,45 +98,57 @@ if st.button(f"🚀 Train {selected_model_name}", type="primary"):
             st.session_state.trained_model_pipeline = trained_pipeline
             st.success(f"✅ Model '{selected_model_name}' trained successfully!")
 
-            # 4. Evaluate model with new table-based display
-            st.subheader("3. Model Evaluation (on Test Set)")
-            evaluation_results = evaluate_model(trained_pipeline, X_test, y_test, task_type)
+            # 4. Evaluate and STORE evaluation results in session state
+            st.session_state.evaluation_results = evaluate_model(trained_pipeline, X_test, y_test, task_type)
 
-            simple_metrics = {}
-            complex_results = {}
-            if evaluation_results:
-                for key, value in evaluation_results.items():
-                    if isinstance(value, (int, float, np.number)):
-                        simple_metrics[key] = value
-                    else:
-                        complex_results[key] = value
-
-            if simple_metrics:
-                st.markdown("##### Key Metrics")
-                metrics_df = pd.DataFrame(list(simple_metrics.items()), columns=['Metric', 'Value'])
-                metrics_df['Value'] = metrics_df['Value'].apply(lambda x: f'{x:.4f}' if isinstance(x, float) else x)
-                st.dataframe(metrics_df, use_container_width=True, hide_index=True)
-
-            if 'confusion_matrix' in complex_results:
-                st.markdown("##### Confusion Matrix")
-                cm = complex_results['confusion_matrix']
-                try:
-                    class_labels = trained_pipeline.classes_
-                    cm_df = pd.DataFrame(cm, index=[f"Actual: {label}" for label in class_labels], columns=[f"Predicted: {label}" for label in class_labels])
-                    st.dataframe(cm_df, use_container_width=True)
-                except Exception:
-                    st.dataframe(pd.DataFrame(cm), use_container_width=True)
-
-            if 'classification_report' in complex_results:
-                st.markdown("##### Classification Report")
-                st.code(str(complex_results['classification_report']))
-
-            st.info("You can now use this model for predictions on the next pages.")
         else:
             st.error("🔴 Model training failed. Check messages above for details.")
             st.session_state.trained_model_pipeline = None
+            st.session_state.evaluation_results = None # Clear old results on failure
 
-# Display info about the currently trained model in session state
+
+# --- NEW: Persistent Evaluation Display ---
+# This block runs every time the page loads, not just on button click.
+# It checks if a model and its evaluation results exist in the session state.
+if 'trained_model_pipeline' in st.session_state and st.session_state.trained_model_pipeline is not None:
+    st.subheader("3. Model Evaluation (on Test Set)")
+
+    evaluation_results = st.session_state.get('evaluation_results', {})
+
+    if not evaluation_results:
+        st.warning("Evaluation results not found in session. Please train the model again.")
+    else:
+        simple_metrics = {}
+        complex_results = {}
+        for key, value in evaluation_results.items():
+            if isinstance(value, (int, float, np.number)):
+                simple_metrics[key] = value
+            else:
+                complex_results[key] = value
+
+        if simple_metrics:
+            st.markdown("##### Key Metrics")
+            metrics_df = pd.DataFrame(list(simple_metrics.items()), columns=['Metric', 'Value'])
+            metrics_df['Value'] = metrics_df['Value'].apply(lambda x: f'{x:.4f}' if isinstance(x, float) else x)
+            st.dataframe(metrics_df, use_container_width=True, hide_index=True)
+
+        if 'confusion_matrix' in complex_results:
+            st.markdown("##### Confusion Matrix")
+            cm = complex_results['confusion_matrix']
+            try:
+                class_labels = st.session_state.trained_model_pipeline.classes_
+                cm_df = pd.DataFrame(cm, index=[f"Actual: {label}" for label in class_labels], columns=[f"Predicted: {label}" for label in class_labels])
+                st.dataframe(cm_df, use_container_width=True)
+            except Exception:
+                st.dataframe(pd.DataFrame(cm), use_container_width=True)
+
+        if 'classification_report' in complex_results:
+            st.markdown("##### Classification Report")
+            st.code(str(complex_results['classification_report']))
+
+
+# --- Current Model Status Display ---
+# This part correctly checks session state and will now always show the status of the persistent model.
 if st.session_state.get("trained_model_pipeline"):
     st.markdown("---")
     st.subheader("✨ Current Trained Model Status")

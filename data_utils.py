@@ -4,11 +4,12 @@ import pandas as pd
 from datetime import datetime
 import time
 import os
-import json 
+import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-WORLD_CITIES = [] 
+WORLD_CITIES = []
 
+# Added descriptions for the new encoded columns
 WEATHER_FEATURE_DESCRIPTIONS = {
     'timestamp': 'Timestamp of when the data was recorded by this script',
     'city': 'Name of the city reported by OpenWeatherMap',
@@ -35,22 +36,23 @@ WEATHER_FEATURE_DESCRIPTIONS = {
     'sunset': 'Sunset time in HH:MM:SS format (local city time)',
     'timezone_offset_seconds': 'Shift in seconds from UTC for the city',
     'dt_unix': 'Time of data calculation by OpenWeatherMap, Unix, UTC',
-    'query_city': 'The original city string used for the API query'
+    'query_city': 'The original city string used for the API query',
+    'city_encoded': 'A numeric label encoding for the city name',
+    'country_encoded': 'A numeric label encoding for the country code'
 }
 
-DEFAULT_CITY_JSON_PATH = "current_city_list.json" 
+DEFAULT_CITY_JSON_PATH = "current_city_list.json"
 
 def load_and_process_city_json(
-    num_cities_to_use, 
-    json_file_path=DEFAULT_CITY_JSON_PATH, 
+    num_cities_to_use,
+    json_file_path=DEFAULT_CITY_JSON_PATH,
     output_csv_filename="derived_cities_for_collection.csv"
 ):
     """
-    Loads cities from a local JSON file, processes them based on num_cities_to_use, 
+    Loads cities from a local JSON file, processes them based on num_cities_to_use,
     saves to a CSV, and returns a list of "CityName,CountryCode" strings.
     """
     if not os.path.exists(json_file_path):
-        # This message will be returned and should be displayed by the calling Streamlit page
         return [], f"City JSON file not found at '{json_file_path}'. Please ensure it exists in the project directory."
 
     try:
@@ -62,11 +64,11 @@ def load_and_process_city_json(
 
         processed_cities_for_csv = []
         city_country_list_for_api = []
-        
+
         actual_num_to_process = min(num_cities_to_use, len(city_data_list))
         if num_cities_to_use > len(city_data_list):
             print(f"Warning: Requested {num_cities_to_use} cities, but JSON only contains {len(city_data_list)}. Using all {len(city_data_list)} available.")
-        
+
         cities_to_process = city_data_list[:actual_num_to_process]
 
         for city_entry in cities_to_process:
@@ -74,7 +76,7 @@ def load_and_process_city_json(
                 print(f"Skipping non-dictionary entry in JSON: {city_entry}")
                 continue
 
-            city_name = city_entry.get("name") 
+            city_name = city_entry.get("name")
             country_code = city_entry.get("country")
 
             if city_name and country_code:
@@ -90,13 +92,13 @@ def load_and_process_city_json(
             df_cities = pd.DataFrame(processed_cities_for_csv)
             df_cities.to_csv(output_csv_filename, index=False)
             print(f"Successfully processed {len(df_cities)} cities and saved to '{output_csv_filename}'.")
-        
+
         return city_country_list_for_api, None
 
     except json.JSONDecodeError:
         return [], f"Invalid JSON format in '{json_file_path}'. Please check the file content."
     except FileNotFoundError:
-        return [], f"City JSON file not found at '{json_file_path}' during open operation (should have been caught earlier)."
+        return [], f"City JSON file not found at '{json_file_path}' during open operation."
     except Exception as e:
         return [], f"An unexpected error occurred while processing '{json_file_path}': {str(e)}"
 
@@ -157,7 +159,7 @@ def get_weather_data_single(api_key, city_query_string):
         elif e.response.status_code == 404: return None, f"City {city_query_string} not found."
         return None, f"HTTP error for {city_query_string}: {e.response.status_code} - {e.response.text}"
     except requests.exceptions.RequestException as e: return None, f"Request error for {city_query_string}: {str(e)}"
-    except (KeyError, IndexError, TypeError) as e: return None, f"Data parsing error for {city_query_string}: {str(e)}" # More specific
+    except (KeyError, IndexError, TypeError) as e: return None, f"Data parsing error for {city_query_string}: {str(e)}"
     except Exception as e: return None, f"Unexpected error for {city_query_string}: {str(e)}"
 
 
@@ -165,8 +167,8 @@ def fetch_weather_for_cities_batch(api_key, cities_to_fetch, concurrent_requests
     """Fetches weather data for a given batch of cities concurrently."""
     all_weather_data_from_batch = []
     error_messages_from_batch = []
-    
-    if not cities_to_fetch: 
+
+    if not cities_to_fetch:
         if status_text_placeholder: status_text_placeholder.info("No cities provided for this batch.")
         return [], []
 
@@ -178,7 +180,7 @@ def fetch_weather_for_cities_batch(api_key, cities_to_fetch, concurrent_requests
             executor.submit(get_weather_data_single, api_key, city): city
             for city in cities_to_fetch
         }
-        
+
         for future in as_completed(future_to_city):
             city = future_to_city[future]
             processed_count += 1
@@ -190,12 +192,12 @@ def fetch_weather_for_cities_batch(api_key, cities_to_fetch, concurrent_requests
                     error_messages_from_batch.append(error)
             except Exception as exc:
                 error_messages_from_batch.append(f"City {city} generated an exception: {exc}")
-            
+
             if progress_bar_placeholder and status_text_placeholder:
                 progress = processed_count / total_in_batch
                 progress_bar_placeholder.progress(progress)
                 status_text_placeholder.text(f"Checking city {processed_count}/{total_in_batch} in current batch: {city.split(',')[0] if ',' in city else city}...")
-            time.sleep(0.1) # Small delay for UI update and to be gentle with API
+            time.sleep(0.05) # Small delay for UI update and to be gentle with API
 
     if status_text_placeholder:
         status_text_placeholder.text(f"Batch check complete. Found {len(all_weather_data_from_batch)} valid responses from {total_in_batch} cities.")
@@ -212,13 +214,31 @@ def save_data_to_csv(data_list, filename):
     except Exception as e: return False, f"Error saving data to CSV '{filename}': {str(e)}"
 
 def load_data_from_csv(filename):
-    """Loads data from a CSV file if it exists."""
+    """
+    Loads data from a CSV file if it exists and applies a simple
+    label encoding to the 'city' and 'country' columns for analysis.
+    """
     if os.path.exists(filename):
         try:
-            return pd.read_csv(filename)
-        except pd.errors.EmptyDataError: 
+            df = pd.read_csv(filename)
+            if df.empty:
+                print(f"Info: CSV file '{filename}' is empty.")
+                return pd.DataFrame()
+
+            # --- Apply simple label encoding ---
+            # This is useful for some types of analysis and visualization.
+            # Note: For robust machine learning, it's better to use encoders
+            # from scikit-learn (like OneHotEncoder or OrdinalEncoder) within a
+            # modeling pipeline to avoid data leakage and ensure consistency.
+            if 'city' in df.columns:
+                df['city_encoded'] = pd.factorize(df['city'])[0]
+            if 'country' in df.columns:
+                df['country_encoded'] = pd.factorize(df['country'])[0]
+
+            return df
+        except pd.errors.EmptyDataError:
             print(f"Info: CSV file '{filename}' is empty.")
-            return pd.DataFrame() 
+            return pd.DataFrame()
         except Exception as e:
             print(f"Error loading data from CSV '{filename}': {str(e)}")
             return pd.DataFrame()
