@@ -30,8 +30,8 @@ if df_for_schema.empty:
 st.info(f"**Using model:** `{st.session_state.get('model_name', 'N/A')}` predicting **'{target_display_name}'** ({task_type.capitalize()})")
 st.markdown(f"Please provide values for the following **{len(features_to_input)} selected feature(s)**:")
 
-# --- Create mapping dictionaries for user-friendly inputs ---
-# This allows users to select by name, while we send the encoded value to the model.
+# # --- Create mapping dictionaries for user-friendly inputs ---
+# # This allows users to select by name, while we send the encoded value to the model.
 city_map = {}
 country_map = {}
 if 'city' in df_for_schema.columns and 'city_encoded' in df_for_schema.columns:
@@ -49,34 +49,59 @@ if 'country' in df_for_schema.columns and 'country_encoded' in df_for_schema.col
 
 # --- Create input widgets for each feature ---
 input_data = {}
+
+# Buat kamus pemetaan untuk konversi nama ke nilai encode
+# country_map = dict(zip(df_for_schema['country'], df_for_schema['country_encoded']))
+# city_map = dict(zip(df_for_schema['city'], df_for_schema['city_encoded']))
+
+# --- 1. Widget Input Negara (Master) ---
+# Periksa apakah 'country_encoded' adalah salah satu fitur yang dibutuhkan model
+if 'country_encoded' in features_to_input:
+    # Dapatkan daftar negara yang unik dan urutkan
+    unique_countries = sorted(df_for_schema['country'].astype(str).unique())
+    
+    # Atur nilai default jika belum ada di session state
+    if 'manual_pred_country' not in st.session_state:
+        st.session_state.manual_pred_country = unique_countries[0]
+
+    def on_country_change():
+        st.session_state.manual_pred_country = st.session_state.country_selector
+
+    # Buat selectbox untuk negara
+    selected_country_name = st.selectbox(
+        label="Country",
+        options=unique_countries,
+        key='country_selector', # Gunakan key untuk callback
+        on_change=on_country_change
+    )
+    # Simpan nilai encode negara yang dipilih ke dalam input_data
+    input_data['country_encoded'] = country_map.get(selected_country_name, -1)
+
+# --- 2. Widget Input Kota (Dependent) ---
+# Periksa apakah 'city_encoded' adalah salah satu fitur yang dibutuhkan model
+if 'city_encoded' in features_to_input:
+    # Filter kota berdasarkan negara yang dipilih di widget negara
+    if 'country_encoded' not in features_to_input:
+        cities_in_country = sorted(df_for_schema['city'].unique())
+    else:
+        cities_in_country = sorted(df_for_schema[df_for_schema['country'] == selected_country_name]['city'].unique())
+    
+    if cities_in_country:
+        selected_city_name = st.selectbox(
+            label=f"City",
+            options=cities_in_country
+        )
+        # Simpan nilai encode kota yang dipilih
+        input_data['city_encoded'] = city_map.get(selected_city_name, -1)
+    else:
+        # Jika tidak ada kota untuk negara tersebut, tampilkan widget yang dinonaktifkan
+        st.selectbox("City", [], help=f"No city found", disabled=True)
+        input_data['city_encoded'] = -1 # Tandai sebagai tidak valid
+
 form_cols = st.columns(2)
-
-for i, feature_name in enumerate(sorted(features_to_input)):
+other_features = [f for f in features_to_input if f not in ['country_encoded', 'city_encoded']]
+for i, feature_name in enumerate(sorted(other_features)):
     col = form_cols[i % 2]
-
-    # --- Special handling for encoded city ---
-    if feature_name == 'city_encoded' and city_map:
-        sorted_cities = sorted(city_map.keys())
-        selected_city_name = col.selectbox(
-            label="City", # User-friendly label
-            options=sorted_cities,
-            key="manual_input_city"
-        )
-        # Temporarily store the name, we'll convert it to its code later
-        input_data[feature_name] = selected_city_name
-        continue
-
-    # --- Special handling for encoded country ---
-    if feature_name == 'country_encoded' and country_map:
-        sorted_countries = sorted(country_map.keys())
-        selected_country_name = col.selectbox(
-            label="Country", # User-friendly label
-            options=sorted_countries,
-            key="manual_input_country"
-        )
-        # Temporarily store the name
-        input_data[feature_name] = selected_country_name
-        continue
 
     # --- General handling for other features ---
     if feature_name in df_for_schema.columns:
@@ -100,25 +125,13 @@ for i, feature_name in enumerate(sorted(features_to_input)):
             label=feature_name, key=f"manual_input_{feature_name}"
         )
 
-
 # --- Make Prediction ---
 if st.button("🔮 Predict Manually", type="primary"):
     try:
-        # Create a copy to not alter the display dict
-        prediction_input_data = input_data.copy()
+        input_df = pd.DataFrame([input_data], columns=features_to_input)
 
-        # --- Translate user-friendly names back to encoded numbers ---
-        if 'city_encoded' in prediction_input_data:
-            city_name = prediction_input_data['city_encoded']
-            prediction_input_data['city_encoded'] = city_map.get(city_name, -1) # Use -1 as a sign of error
-
-        if 'country_encoded' in prediction_input_data:
-            country_name = prediction_input_data['country_encoded']
-            prediction_input_data['country_encoded'] = country_map.get(country_name, -1)
-
-        input_df = pd.DataFrame([prediction_input_data], columns=features_to_input)
-
-        st.write("Input Data for Prediction (after encoding):")
+        st.markdown("---")
+        st.write("Input Data for Prediction (already encoded):")
         st.dataframe(input_df, use_container_width=True)
 
         with st.spinner("Predicting..."):
