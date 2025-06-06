@@ -49,6 +49,7 @@ selected_model_name = st.selectbox(
 st.session_state.model_name = selected_model_name
 
 # --- Training ---
+st.markdown("---")
 st.subheader("2. Train Model")
 test_size = st.slider("Test Set Size (split ratio):", min_value=0.1, max_value=0.5, value=0.2, step=0.05)
 
@@ -111,6 +112,7 @@ if st.button(f"🚀 Train {selected_model_name}", type="primary"):
 # This block runs every time the page loads, not just on button click.
 # It checks if a model and its evaluation results exist in the session state.
 if 'trained_model_pipeline' in st.session_state and st.session_state.trained_model_pipeline is not None:
+    st.markdown("---")
     st.subheader("3. Model Evaluation (on Test Set)")
 
     evaluation_results = st.session_state.get('evaluation_results', {})
