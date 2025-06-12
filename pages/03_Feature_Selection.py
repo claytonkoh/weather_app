@@ -183,8 +183,6 @@ if st.session_state.selected_features_for_model:
                 else:
                     st.write("Basic stats/preview not applicable for this data type in this view.")
 
-
-# --- Final Step ---
 if st.session_state.selected_features_for_model and st.session_state.selected_target_key:
     st.markdown("---")
     st.success("✅ Features and target selected. Proceed to the **`04_Model_Training`** page from the sidebar.")

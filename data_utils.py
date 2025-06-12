@@ -9,7 +9,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 
 WORLD_CITIES = []
 
-# Added descriptions for the new encoded columns
 WEATHER_FEATURE_DESCRIPTIONS = {
     'timestamp': 'Timestamp of when the data was recorded by this script',
     'city': 'Name of the city reported by OpenWeatherMap',
@@ -104,7 +103,6 @@ def load_and_process_city_json(
 
 
 def get_weather_data_single(api_key, city_query_string):
-    """Fetch weather data for a single city."""
     try:
         url = f"http://api.openweathermap.org/data/2.5/weather"
         params = {
@@ -164,7 +162,6 @@ def get_weather_data_single(api_key, city_query_string):
 
 
 def fetch_weather_for_cities_batch(api_key, cities_to_fetch, concurrent_requests, progress_bar_placeholder, status_text_placeholder):
-    """Fetches weather data for a given batch of cities concurrently."""
     all_weather_data_from_batch = []
     error_messages_from_batch = []
 
@@ -224,12 +221,6 @@ def load_data_from_csv(filename):
             if df.empty:
                 print(f"Info: CSV file '{filename}' is empty.")
                 return pd.DataFrame()
-
-            # --- Apply simple label encoding ---
-            # This is useful for some types of analysis and visualization.
-            # Note: For robust machine learning, it's better to use encoders
-            # from scikit-learn (like OneHotEncoder or OrdinalEncoder) within a
-            # modeling pipeline to avoid data leakage and ensure consistency.
             if 'city' in df.columns:
                 df['city_encoded'] = pd.factorize(df['city'])[0]
             if 'country' in df.columns:

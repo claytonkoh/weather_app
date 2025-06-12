@@ -9,8 +9,19 @@ from sklearn.impute import SimpleImputer
 from sklearn.metrics import accuracy_score, classification_report, mean_squared_error, r2_score
 import streamlit as st 
 
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    confusion_matrix,
+    classification_report
+)
+
+import numpy as np
+
+
 def get_target_variables(df):
-    """Defines potential target variables based on common goals."""
     targets = {}
     if 'weather_main' in df.columns:
         targets["Predict General Weather Category (Classification)"] = "weather_main" 
@@ -20,10 +31,6 @@ def get_target_variables(df):
     return targets
 
 def preprocess_features_and_engineer_targets(df, selected_features, target_key):
-    """
-    Preprocesses selected features and engineers the specified target variable.
-    Returns X (features DataFrame), y (target Series), and the preprocessor.
-    """
     if df.empty:
         st.error("Input DataFrame is empty for preprocessing.")
         return pd.DataFrame(), pd.Series(dtype='float64'), None
@@ -57,7 +64,6 @@ def preprocess_features_and_engineer_targets(df, selected_features, target_key):
     elif target_key == "weather_description" and 'weather_description' in df.columns:
         y = df['weather_description'].copy()
         st.session_state.model_task_type = "classification"
-    # --- END OF ADDED CASE ---
 
     elif target_key == "target_will_rain" and 'weather_main' in df.columns:
         y = df['weather_main'].apply(lambda x: 1 if isinstance(x, str) and 'Rain' in x else 0).copy()
@@ -175,21 +181,6 @@ def train_model(X_train, y_train, model_name, preprocessor, task_type):
         return None
 
 
-# In model_utils.py
-
-# Make sure you have these imports at the top of the file
-from sklearn.metrics import (
-    accuracy_score,
-    precision_score,
-    recall_score,
-    f1_score,
-    confusion_matrix,
-    classification_report
-)
-import pandas as pd
-import numpy as np
-
-
 def evaluate_model(model_pipeline, X_test, y_test, task_type):
     """
     Evaluates a trained model pipeline and returns a dictionary of metrics.
@@ -203,11 +194,8 @@ def evaluate_model(model_pipeline, X_test, y_test, task_type):
         recall = recall_score(y_test, y_pred, average='weighted', zero_division=0)
         f1 = f1_score(y_test, y_pred, average='weighted', zero_division=0)
         
-        # Generate the confusion matrix and classification report string
         cm = confusion_matrix(y_test, y_pred)
         report_str = classification_report(y_test, y_pred, zero_division=0)
-
-        # Package everything into a dictionary
         results = {
             "Accuracy": accuracy,
             "Precision (Weighted)": precision,
@@ -218,17 +206,10 @@ def evaluate_model(model_pipeline, X_test, y_test, task_type):
         }
         return results
 
-    elif task_type == 'regression':
-        # Add regression metrics here if you expand the app later
-        # from sklearn.metrics import mean_absolute_error, r2_score
-        # ...
-        return {"error": "Regression evaluation not yet implemented."}
-        
     else:
         return {"error": f"Unknown task type '{task_type}' for evaluation."}
 
 def predict_with_model(pipeline, input_df):
-    """Makes predictions on new data using the trained pipeline."""
     if pipeline is None:
         st.error("Model pipeline is not available for prediction.")
         return None, None 

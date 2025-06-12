@@ -19,7 +19,7 @@ data = st.session_state.collected_data_df
 
 tab1, tab2, tab3 = st.tabs(["📋 Dataset View", "📈 Feature Analysis", "📊 Column Distribution"])
 
-with tab1:  # Dataset View
+with tab1: 
     st.markdown("### Complete Dataset")
     st.dataframe(data, use_container_width=True, height=400)
 
@@ -45,12 +45,12 @@ with tab1:  # Dataset View
     info_df = pd.DataFrame(info_buffer)
     st.dataframe(info_df, use_container_width=True)
 
-with tab2:  # Feature Analysis
+with tab2:  
     st.markdown("### Individual Numeric Feature Analysis")
     numeric_features = data.select_dtypes(include=[np.number]).columns.tolist()
     categorical_cols = data.select_dtypes(include=['object', 'category']).columns.tolist()
 
-    # --- Simplified Grouping Logic ---
+    # Simplified Grouping Logic 
     # Automatically determine the best categorical column for grouping without user input.
     grouping_col = None
     if 'weather_main' in categorical_cols:  # Prioritize 'weather_main'
@@ -74,7 +74,6 @@ with tab2:  # Feature Analysis
         if selected_numeric_feature:
             plot_col1, plot_col2 = st.columns(2)
             with plot_col1:
-                # Always show the histogram for the selected numeric feature
                 fig_hist = px.histogram(
                     data, x=selected_numeric_feature, marginal="box", nbins=30,
                     title=f"Distribution of {selected_numeric_feature}"
@@ -108,10 +107,9 @@ with tab2:  # Feature Analysis
                     # Fallback to overall stats if grouping fails
                     st.dataframe(data[[selected_numeric_feature]].describe(), use_container_width=True)
             else:
-                # If no grouping column, just show overall stats
                 st.dataframe(data[[selected_numeric_feature]].describe(), use_container_width=True)
 
-with tab3:  # Column Distribution
+with tab3: 
     st.markdown("### Column Distribution Analysis")
     all_columns_for_dist = data.columns.tolist()
     selected_col_dist = st.selectbox(
