@@ -7,12 +7,10 @@ st.set_page_config(page_title="Manual Prediction", layout="wide")
 st.header("✍️ Manual Prediction")
 st.markdown("Input feature values manually to get a prediction from your trained model.")
 
-# --- Check for trained model ---
 if 'trained_model_pipeline' not in st.session_state or st.session_state.trained_model_pipeline is None:
     st.error("🚨 No model trained yet. Please train a model on the 'Model Training' page first.")
     st.stop()
 
-# --- Load necessary data from session state ---
 pipeline = st.session_state.trained_model_pipeline
 features_to_input = st.session_state.get('selected_features_for_model', [])
 target_display_name = st.session_state.get('selected_target_display_name', "Target")
@@ -30,8 +28,7 @@ st.info(f"**Using model:** `{st.session_state.get('model_name', 'N/A')}` predict
 st.markdown("---")
 st.markdown(f"Please provide values for the following **{len(features_to_input)} selected feature(s)**:")
 
-# # --- Create mapping dictionaries for user-friendly inputs ---
-# # This allows users to select by name, while we send the encoded value to the model.
+# This allows users to select by name, while we send the encoded value to the model.
 city_map = {}
 country_map = {}
 if 'city' in df_for_schema.columns and 'city_encoded' in df_for_schema.columns:
@@ -47,17 +44,10 @@ if 'country' in df_for_schema.columns and 'country_encoded' in df_for_schema.col
     country_map = dict(zip(country_keys, country_values))
 
 
-# --- Create input widgets for each feature ---
+# Create input widgets for each feature 
 input_data = {}
 
-# Buat kamus pemetaan untuk konversi nama ke nilai encode
-# country_map = dict(zip(df_for_schema['country'], df_for_schema['country_encoded']))
-# city_map = dict(zip(df_for_schema['city'], df_for_schema['city_encoded']))
-
-# --- 1. Widget Input Negara (Master) ---
-# Periksa apakah 'country_encoded' adalah salah satu fitur yang dibutuhkan model
 if 'country_encoded' in features_to_input:
-    # Dapatkan daftar negara yang unik dan urutkan
     unique_countries = sorted(df_for_schema['country'].astype(str).unique())
     
     # Atur nilai default jika belum ada di session state
@@ -67,18 +57,14 @@ if 'country_encoded' in features_to_input:
     def on_country_change():
         st.session_state.manual_pred_country = st.session_state.country_selector
 
-    # Buat selectbox untuk negara
     selected_country_name = st.selectbox(
         label="Country",
         options=unique_countries,
         key='country_selector', # Gunakan key untuk callback
         on_change=on_country_change
     )
-    # Simpan nilai encode negara yang dipilih ke dalam input_data
     input_data['country_encoded'] = country_map.get(selected_country_name, -1)
 
-# --- 2. Widget Input Kota (Dependent) ---
-# Periksa apakah 'city_encoded' adalah salah satu fitur yang dibutuhkan model
 if 'city_encoded' in features_to_input:
     # Filter kota berdasarkan negara yang dipilih di widget negara
     if 'country_encoded' not in features_to_input:
@@ -91,10 +77,8 @@ if 'city_encoded' in features_to_input:
             label=f"City",
             options=cities_in_country
         )
-        # Simpan nilai encode kota yang dipilih
         input_data['city_encoded'] = city_map.get(selected_city_name, -1)
     else:
-        # Jika tidak ada kota untuk negara tersebut, tampilkan widget yang dinonaktifkan
         st.selectbox("City", [], help=f"No city found", disabled=True)
         input_data['city_encoded'] = -1 # Tandai sebagai tidak valid
 
@@ -103,7 +87,6 @@ other_features = [f for f in features_to_input if f not in ['country_encoded', '
 for i, feature_name in enumerate(sorted(other_features)):
     col = form_cols[i % 2]
 
-    # --- General handling for other features ---
     if feature_name in df_for_schema.columns:
         feature_series = df_for_schema[feature_name]
         if pd.api.types.is_numeric_dtype(feature_series):
@@ -114,18 +97,17 @@ for i, feature_name in enumerate(sorted(other_features)):
                 key=f"manual_input_{feature_name}",
                 format="%.2f"
             )
-        else: # Fallback to text input for other types
+        else: 
             input_data[feature_name] = col.text_input(
                 label=feature_name,
                 value=str(feature_series.mode()[0]) if not feature_series.mode().empty else "",
                 key=f"manual_input_{feature_name}"
             )
-    else: # If feature not in original df, use generic text input
+    else:
         input_data[feature_name] = col.text_input(
             label=feature_name, key=f"manual_input_{feature_name}"
         )
 
-# --- Make Prediction ---
 if st.button("🔮 Predict Manually", type="primary"):
     try:
         input_df = pd.DataFrame([input_data], columns=features_to_input)

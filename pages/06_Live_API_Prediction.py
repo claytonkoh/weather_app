@@ -20,7 +20,6 @@ if 'api_key' not in st.session_state or not st.session_state.api_key:
     if not st.session_state.api_key:
         st.stop()
 
-# --- Load necessary data from session state ---
 pipeline = st.session_state.trained_model_pipeline
 selected_features_for_model = st.session_state.get('selected_features_for_model', [])
 target_display_name = st.session_state.get('selected_target_display_name', "Target")
@@ -61,7 +60,6 @@ if st.button("🛰️ Fetch Live Data & Predict", type="primary"):
             display_live_cols = ['city', 'country', 'temperature', 'humidity', 'weather_main', 'wind_speed', 'timestamp']
             st.dataframe(live_df_full[[col for col in display_live_cols if col in live_df_full.columns]].head(1), use_container_width=True)
 
-            # --- Prepare data for model ---
             try:
                 # Reindex the DataFrame to match the model's expected features.
                 # This automatically adds any missing columns (like city_encoded) and fills them with NaN.
@@ -74,7 +72,6 @@ if st.button("🛰️ Fetch Live Data & Predict", type="primary"):
                 st.error(f"Error preparing live data for the model: {e}")
                 st.stop()
 
-            # --- Make Prediction with the Model ---
             st.subheader(f"🔮 Prediction for {live_weather_data_dict.get('city', city_name_query)}")
             with st.spinner("Using trained model to predict..."):
                 predictions, probabilities = predict_with_model(pipeline, prediction_input_df)

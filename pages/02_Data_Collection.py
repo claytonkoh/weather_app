@@ -9,7 +9,6 @@ from data_utils import (
     load_data_from_csv,
 )
 
-# --- Page and Session State Configuration ---
 st.set_page_config(page_title="Rate Limited Data Collection", layout="wide")
 st.header("💾 Rate Limited Weather Data Collection")
 st.markdown("Load an existing weather dataset, or configure and run a new collection process using a predefined list of cities.")
@@ -36,9 +35,6 @@ for key, value in default_values.items():
     if key not in st.session_state:
         st.session_state[key] = value
 
-# =============================================================================
-# 1. DATA LOADING & STATUS SECTION
-# =============================================================================
 st.subheader("📂 Step 1: Load Existing Dataset")
 
 # --- Data Status Display ---
@@ -73,9 +69,6 @@ if st.button("🔄 Load or Refresh Data from Main CSV", key="load_data_main"):
 
 st.markdown("---")
 
-# =============================================================================
-# 2. CONFIGURATION SECTION
-# =============================================================================
 st.subheader("⚙️ Step 2: Configure New Data Collection")
 CITY_SOURCE_FILE = "derived_cities_for_collection.csv"
 
@@ -125,9 +118,6 @@ if st.session_state.cities_for_collection:
 
 st.markdown("---")
 
-# =============================================================================
-# 3. DATA COLLECTION SECTION
-# =============================================================================
 st.subheader("🚀 Step 3: Initiate and Monitor Collection")
 
 if st.session_state.collection_running:

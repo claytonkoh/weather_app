@@ -33,7 +33,6 @@ selected_features = st.session_state.selected_features_for_model
 target_key = st.session_state.selected_target_key
 task_type = st.session_state.model_task_type
 
-# --- Model Selection ---
 st.subheader("1. Select Model")
 if task_type == "classification":
     model_options = ["Random Forest Classifier", "Logistic Regression"]
@@ -56,7 +55,6 @@ test_size = st.slider("Test Set Size (split ratio):", min_value=0.1, max_value=0
 
 if st.button(f"🚀 Train {selected_model_name}", type="primary"):
     with st.spinner(f"Processing data and training {selected_model_name}..."):
-        # 1. Preprocess features and engineer target
         X, y, preprocessor = preprocess_features_and_engineer_targets(df.copy(), selected_features, target_key)
 
         if X.empty or y.empty or y.isnull().all():
@@ -109,7 +107,6 @@ if st.button(f"🚀 Train {selected_model_name}", type="primary"):
             st.session_state.evaluation_results = None # Clear old results on failure
 
 
-# --- NEW: Persistent Evaluation Display ---
 # This block runs every time the page loads, not just on button click.
 # It checks if a model and its evaluation results exist in the session state.
 if 'trained_model_pipeline' in st.session_state and st.session_state.trained_model_pipeline is not None:
@@ -138,22 +135,19 @@ if 'trained_model_pipeline' in st.session_state and st.session_state.trained_mod
                 metrics_df,
                 x='Metric',
                 y='Value',
-                orientation='v',  # 'h' untuk horizontal
-                text='Value'      # Menampilkan nilai di ujung batang
+                orientation='v',
+                text='Value'      
             )
 
-            # 3. Kustomisasi Tampilan (INI BAGIAN PENTING)
             fig.update_layout(
             title="Perbandingan Metrik Evaluasi",
             xaxis_title="Skor",
             yaxis_title="Metrik",
-            # Atur rentang sumbu X dari 0 hingga 1
             yaxis=dict(range=[0, 1])
             )
-            fig.update_traces(texttemplate='%{text:.4f}', textposition='outside', width=0.5) # Format teks
+            fig.update_traces(texttemplate='%{text:.4f}', textposition='outside', width=0.5)
             fig.update_layout(height=500)
 
-            # 4. Tampilkan grafik di Streamlit
             st.plotly_chart(fig, use_container_width=True)
 
         if 'confusion_matrix' in complex_results:
@@ -171,14 +165,11 @@ if 'trained_model_pipeline' in st.session_state and st.session_state.trained_mod
 
             formatted_report = ""
             for line in complex_results['classification_report'].splitlines():
-                formatted_report += line.expandtabs(202) + "\n"  # ganti tab dengan 4 spasi
+                formatted_report += line.expandtabs(202) + "\n"
             st.code(formatted_report)
-            # st.code(complex_results['classification_report'])
-
 
 # --- Current Model Status Display ---
 # This part correctly checks session state and will now always show the status of the persistent model.
 if st.session_state.get("trained_model_pipeline"):
     st.markdown("---")
-    # st.subheader("✨ Current Trained Model Status")
     st.success(f"**Model:** `{st.session_state.get('model_name', 'N/A')}` is trained and ready for predictions.")
