@@ -71,7 +71,7 @@ if 'selected_features_for_model' not in st.session_state:
 
 # --- Section 2: Input Feature Selection ---
 st.subheader("2. Select Input Features")
-st.write(f"Available features (target '{st.session_state.selected_target_key}' and others excluded):")
+# st.write(f"Available features (target '{st.session_state.selected_target_key}' and others excluded):")
 
 btn_col_a, btn_col_b = st.columns(2)
 with btn_col_a:
@@ -108,10 +108,10 @@ st.markdown("---")
 
 # --- Section 3: Selected Features Analysis ---
 if st.session_state.selected_features_for_model:
-    st.subheader("3. Selected Features: Analysis & Details")
+    st.subheader("3. Selected Numeric Features: Analysis & Details")
 
     # Relationship with Target
-    st.markdown("#### Numeric Feature Distribution by Target Category")
+    # st.markdown("#### Numeric Feature Distribution by Target Category")
     selected_numeric_features = [
         f for f in st.session_state.selected_features_for_model
         if f in data.columns and pd.api.types.is_numeric_dtype(data[f])

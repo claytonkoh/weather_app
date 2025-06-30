@@ -7,6 +7,7 @@ from model_utils import (
     train_model,
     evaluate_model
 )
+import plotly.express as px
 
 st.set_page_config(page_title="Model Training", layout="wide")
 st.header("🤖 Model Training")
@@ -132,7 +133,28 @@ if 'trained_model_pipeline' in st.session_state and st.session_state.trained_mod
             st.markdown("##### Key Metrics")
             metrics_df = pd.DataFrame(list(simple_metrics.items()), columns=['Metric', 'Value'])
             metrics_df['Value'] = metrics_df['Value'].apply(lambda x: f'{x:.4f}' if isinstance(x, float) else x)
-            st.dataframe(metrics_df, use_container_width=True, hide_index=True)
+
+            fig = px.bar(
+                metrics_df,
+                x='Metric',
+                y='Value',
+                orientation='v',  # 'h' untuk horizontal
+                text='Value'      # Menampilkan nilai di ujung batang
+            )
+
+            # 3. Kustomisasi Tampilan (INI BAGIAN PENTING)
+            fig.update_layout(
+            title="Perbandingan Metrik Evaluasi",
+            xaxis_title="Skor",
+            yaxis_title="Metrik",
+            # Atur rentang sumbu X dari 0 hingga 1
+            yaxis=dict(range=[0, 1])
+            )
+            fig.update_traces(texttemplate='%{text:.4f}', textposition='outside', width=0.5) # Format teks
+            fig.update_layout(height=500)
+
+            # 4. Tampilkan grafik di Streamlit
+            st.plotly_chart(fig, use_container_width=True)
 
         if 'confusion_matrix' in complex_results:
             st.markdown("##### Confusion Matrix")
@@ -146,16 +168,17 @@ if 'trained_model_pipeline' in st.session_state and st.session_state.trained_mod
 
         if 'classification_report' in complex_results:
             st.markdown("##### Classification Report")
-            st.code(str(complex_results['classification_report']))
+
+            formatted_report = ""
+            for line in complex_results['classification_report'].splitlines():
+                formatted_report += line.expandtabs(202) + "\n"  # ganti tab dengan 4 spasi
+            st.code(formatted_report)
+            # st.code(complex_results['classification_report'])
 
 
 # --- Current Model Status Display ---
 # This part correctly checks session state and will now always show the status of the persistent model.
 if st.session_state.get("trained_model_pipeline"):
     st.markdown("---")
-    st.subheader("✨ Current Trained Model Status")
+    # st.subheader("✨ Current Trained Model Status")
     st.success(f"**Model:** `{st.session_state.get('model_name', 'N/A')}` is trained and ready for predictions.")
-    st.write(f"**Task Type:** {st.session_state.get('model_task_type', 'N/A').capitalize()}")
-    st.write(f"**Target:** {st.session_state.get('selected_target_display_name', 'N/A')}")
-    with st.expander("Show Features Used for Training"):
-        st.write(st.session_state.get('selected_features_for_model', []))

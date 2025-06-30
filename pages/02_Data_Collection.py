@@ -80,7 +80,7 @@ st.subheader("⚙️ Step 2: Configure New Data Collection")
 CITY_SOURCE_FILE = "derived_cities_for_collection.csv"
 
 with st.expander("API, Rate Limit, and City Selection Settings", expanded=False):
-    st.session_state.api_key = st.text_input("OpenWeatherMap API Key", value=st.session_state.api_key, type="password")
+    st.session_state.api_key = st.text_input("OpenWeatherMap API Key", value=st.session_state.api_key, type="default")
 
     st.subheader("City Source Configuration")
     if os.path.exists(CITY_SOURCE_FILE):
