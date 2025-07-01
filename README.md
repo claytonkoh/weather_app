@@ -32,12 +32,12 @@ The primary goal of this project is to build a classification model capable of p
 ```
 .
 ├── pages/
-│   ├── 02_📊_Dataset_Exploration.py
-│   ├── 03_🎯_Feature_Selection.py
-│   ├── 04_🤖_Model_Training.py
-│   ├── 05_✍️_Manual_Prediction.py
-│   └── 06_📡_Live_API_Prediction.py
-├── 01_💾_Rate_Limited_Data_Collection.py  # Main entry point of the app
+│   ├── 02_Dataset_Exploration.py
+│   ├── 03_Feature_Selection.py
+│   ├── 04_Model_Training.py
+│   ├── 05__Manual_Prediction.py
+│   └── 06_Live_API_Prediction.py
+├── 01_Rate_Limited_Data_Collection.py  # Main entry point of the app
 ├── data_utils.py           # Helper functions for data loading & API calls
 ├── model_utils.py          # Helper functions for preprocessing & model training
 ├── requirements.txt        # Python package dependencies
@@ -84,7 +84,7 @@ pip install -r requirements.txt
 With your virtual environment activated, run the following command from the project's root directory:
 
 ```bash
-streamlit run 01_💾_Rate_Limited_Data_Collection.py
+streamlit run 01_Rate_Limited_Data_Collection.py
 ```
 
 Your web browser should automatically open a new tab with the running application.
