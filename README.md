@@ -78,19 +78,6 @@ Run this command to install all required libraries from the `requirements.txt` f
 pip install -r requirements.txt
 ```
 
-### 5. Set Up Your API Key
-For security, use Streamlit's secrets management.
-- Create a folder named `.streamlit` in the root of the project directory.
-- Inside that folder, create a file named `secrets.toml`.
-- Add your API key to the file like this:
-
-    ```toml
-    # .streamlit/secrets.toml
-    OPENWEATHER_API_KEY = "YOUR_ACTUAL_API_KEY_HERE"
-    ```
-The application is coded to automatically look for this key.
-
----
 
 ## ▶️ How to Run the Application
 
