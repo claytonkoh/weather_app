@@ -85,7 +85,7 @@ pip install -r requirements.txt
 With your virtual environment activated, run the following command from the project's root directory:
 
 ```bash
-streamlit run 01_Rate_Limited_Data_Collection.py
+streamlit run Home.py
 ```
 
 Your web browser should automatically open a new tab with the running application.
