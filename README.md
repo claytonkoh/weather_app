@@ -31,8 +31,6 @@ The primary goal of this project is to build a classification model capable of p
 
 ```
 .
-├── .streamlit/
-│   └── secrets.toml        # For securely storing API keys
 ├── pages/
 │   ├── 02_📊_Dataset_Exploration.py
 │   ├── 03_🎯_Feature_Selection.py
