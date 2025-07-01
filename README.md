@@ -32,12 +32,13 @@ The primary goal of this project is to build a classification model capable of p
 ```
 .
 ├── pages/
-│   ├── 02_Dataset_Exploration.py
+│   ├── 02_Data_Exploration.py
+|   ├── 02_Data_Collection.py
 │   ├── 03_Feature_Selection.py
 │   ├── 04_Model_Training.py
 │   ├── 05__Manual_Prediction.py
 │   └── 06_Live_API_Prediction.py
-├── 01_Rate_Limited_Data_Collection.py  # Main entry point of the app
+├── Home.py  # Main entry point of the app
 ├── data_utils.py           # Helper functions for data loading & API calls
 ├── model_utils.py          # Helper functions for preprocessing & model training
 ├── requirements.txt        # Python package dependencies
