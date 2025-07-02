@@ -1,4 +1,4 @@
-# End-to-End Weather Prediction Machine Learning App
+# Real Time Weather Classification using Machine Learning
 
 This repository contains a multi-page Streamlit web application that demonstrates a complete end-to-end machine learning workflow. The application handles everything from rate-limited API data collection and CSV storage to interactive data exploration, feature selection, model training, and live prediction.
 
@@ -38,11 +38,15 @@ The primary goal of this project is to build a classification model capable of p
 │   ├── 04_Model_Training.py
 │   ├── 05__Manual_Prediction.py
 │   └── 06_Live_API_Prediction.py
-├── Home.py  # Main entry point of the app
-├── data_utils.py           # Helper functions for data loading & API calls
-├── model_utils.py          # Helper functions for preprocessing & model training
-├── requirements.txt        # Python package dependencies
-└── README.md               # You are here
+├── Home.py                             # Main entry point of the app
+├── README.md                           # You are here <──
+├── current_city_list.json              # Default city list for randomize
+├── data_utils.py                       # Helper functions for data loading & API calls
+├── derived_cities_for_collection.csv   # Randomized city list
+├── model_utils.py                      # Helper functions for preprocessing & model training
+├── pexels-jplenio-1118873.jpg          # Photo assets
+├── rate_limited_weather_data.csv       # Weather dataset
+└── requirements.txt                    # Python package dependencies
 ```
 
 ---
